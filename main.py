@@ -12,14 +12,30 @@ from googleapiclient.errors import HttpError
 # If modifying these scopes, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
+def get_data(creds, spreadsheet_info):
+    try:
+        service = build('sheets', 'v4', credentials=creds)
+
+        # Call the Sheets API
+        sheet = service.spreadsheets()
+
+        result = sheet.values().get(spreadsheetId=spreadsheet_info['spreadsheet_id'],
+                                    range=spreadsheet_info['range_name']).execute()
+        values = result.get('values', [])
+
+        return values
+
+    except HttpError as err:
+        print(err)
+
 def main():
     if not os.path.exists('sheets.json'):
         print("sheets.json not found!")
         exit(1)
 
-    data = None
+    sheets = None
     with open('sheets.json') as json_file:
-        data = json.load(json_file)
+        sheets = json.load(json_file)
 
     creds = None
     # The file token.json stores the user's access and refresh tokens, and is
@@ -39,41 +55,50 @@ def main():
         with open('token.json', 'w') as token:
             token.write(creds.to_json())
 
-    try:
-        service = build('sheets', 'v4', credentials=creds)
+    # obtengo los gastos para cada cliente
+    values_expenses = get_data(creds, sheets['expenses'])
+    if not values_expenses:
+        print("No data for expenses found!")
+        return
 
-        # Call the Sheets API
-        sheet = service.spreadsheets()
+    # obtengo los ingresos para cada cliente
+    values_earnings = get_data(creds, sheets['earnings'])
+    if not values_earnings:
+        print("No data for earnings found!")
+        return
 
-        result_expenses = sheet.values().get(spreadsheetId=data['expenses']['spreadsheet_id'],
-                                    range=data['expenses']['range_name']).execute()
-        values_expenses = result_expenses.get('values', [])
+    # inicio el diccionario para guardar los balances de los clientes
+    clients_balance = {}
 
-        if not values_expenses:
-            print('No data for expenses found.')
-            return
+    # resto los gastos
+    for row in values_expenses:
+        try:
+            client_id, expense = row[0], float(row[1])
+        except ValueError as e:
+            print(f"Error converting {row[1]} to float: {e}")
+            exit(2)
+        if client_id in clients_balance:
+            clients_balance[client_id] -= expense
+        else:
+            clients_balance[client_id] = -expense
 
-        print('CLIENT_ID, EXPENSES')
-        for row in values_expenses:
-            # Imprimo el client_id en conjunto con los gastos
-            print(f"{row[0]}, {row[1]}")
+    # sumo los ingresos
+    for row in values_earnings:
+        try:
+            client_id, earning = row[0], float(row[1])
+        except ValueError as e:
+            print(f"Error converting {row[1]} to float: {e}")
+            exit(2)
+        if client_id in clients_balance:
+            clients_balance[client_id] += earning
+        else:
+            clients_balance[client_id] = +earning
 
-        result_earnings = sheet.values().get(spreadsheetId=data['earnings']['spreadsheet_id'],
-                                    range=data['earnings']['range_name']).execute()
-        values_earnings = result_earnings.get('values', [])
-
-        print('CLIENT_ID, EARNINGS')
-        for row in values_earnings:
-            # Imprimo el client_id en conjunto con los ingresos
-            print(f"{row[0]}, {row[1]}")
-
-        if not values_earnings:
-            print('No data for earnings found.')
-            return
-
-    except HttpError as err:
-        print(err)
-
+    for client, balance in clients_balance.items():
+        if(balance < 0):
+            # TODO: ALERT!
+            pass
+        print(client, balance)
 
 if __name__ == '__main__':
     main()
