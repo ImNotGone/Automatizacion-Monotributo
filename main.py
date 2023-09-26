@@ -68,7 +68,7 @@ def main():
             print(f"{row[0]}, {row[1]}")
 
         if not values_earnings:
-            print('No data for expenses found.')
+            print('No data for earnings found.')
             return
 
     except HttpError as err:
