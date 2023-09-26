@@ -116,7 +116,7 @@ def main():
         if client_id in clients_balance:
             clients_balance[client_id] += earning
         else:
-            clients_balance[client_id] = +earning
+            clients_balance[client_id] = earning
 
     for client_id, balance in clients_balance.items():
         if(balance < 0):
