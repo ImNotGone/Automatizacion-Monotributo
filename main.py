@@ -12,6 +12,30 @@ from googleapiclient.errors import HttpError
 # If modifying these scopes, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
+# no se bien como funciona esto pero es facil de modificar
+def get_category(balance):
+    if balance < 1000000:
+        return "A"
+    if balance < 1486000:
+        return "B"
+    if balance < 2081000:
+        return "C"
+    if balance < 2584000:
+        return "D"
+    if balance < 3043000:
+        return "E"
+    if balance < 3803043:
+        return "F"
+    if balance < 4563652:
+        return "G"
+    if balance < 5650236:
+        return "H"
+    if balance < 6323918:
+        return "I"
+    if balance < 7247514:
+        return "J"
+    return "K"
+
 def get_data(creds, spreadsheet_info):
     try:
         service = build('sheets', 'v4', credentials=creds)
@@ -94,11 +118,15 @@ def main():
         else:
             clients_balance[client_id] = +earning
 
-    for client, balance in clients_balance.items():
+    for client_id, balance in clients_balance.items():
         if(balance < 0):
             # TODO: ALERT!
             pass
-        print(client, balance)
+        # calculo la categoria del monotributo
+        category = get_category(balance)
+        # la agrego al diccionario
+        clients_balance[client_id] = (balance, category)
+        print(client_id, clients_balance[client_id])
 
 if __name__ == '__main__':
     main()
