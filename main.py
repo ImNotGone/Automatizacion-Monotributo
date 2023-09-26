@@ -4,6 +4,9 @@ import os.path
 import json
 import datetime
 
+from src.smtp import send_email
+from src.client import Client
+
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -76,9 +79,22 @@ def get_json_file(file_name):
 
     return info
 
+def process_values(values, dictionary, func):
+    for row in values:
+        try:
+            client_id, x = row[0], float(row[1])
+        except ValueError as e:
+            print(f"Error converting {row[1]} to float: {e}")
+            exit(2)
+        if not client_id in dictionary:
+            dictionary[client_id] = Client(client_id)
+        func(dictionary[client_id], x)
+
 def main():
     sheets = get_json_file('sheets.json')
     categories = get_json_file('categories.json')
+    email_config = get_json_file('email_config.json')
+    email_credentials = get_json_file('credentials/email.json')
 
     creds = None
     # The file token.json stores the user's access and refresh tokens, and is
@@ -92,7 +108,7 @@ def main():
             creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
-                'credentials.json', SCOPES)
+                'credentials/credentials.json', SCOPES)
             creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
         with open('token.json', 'w') as token:
@@ -110,43 +126,23 @@ def main():
         print("No data for earnings found!")
         return
 
-    # inicio el diccionario para guardar los balances de los clientes
-    clients_balance = {}
+    # inicio el diccionario {id -> cliente}
+    clients = {}
 
-    # resto los gastos
-    for row in values_expenses:
-        try:
-            client_id, expense = row[0], float(row[1])
-        except ValueError as e:
-            print(f"Error converting {row[1]} to float: {e}")
-            exit(2)
-        if client_id in clients_balance:
-            clients_balance[client_id] -= expense
-        else:
-            clients_balance[client_id] = -expense
+    # agrego los gastos
+    process_values(values_expenses, clients, Client.add_expenses)
 
-    # sumo los ingresos
-    for row in values_earnings:
-        try:
-            client_id, earning = row[0], float(row[1])
-        except ValueError as e:
-            print(f"Error converting {row[1]} to float: {e}")
-            exit(2)
-        if client_id in clients_balance:
-            clients_balance[client_id] += earning
-        else:
-            clients_balance[client_id] = earning
+    # agrego los ingresos
+    process_values(values_earnings, clients, Client.add_earnings)
 
     output_rows = [["CLIENT_ID", "CATEGORY"]]
-    for client_id, balance in clients_balance.items():
-        if(balance < 0):
-            # TODO: ALERT!
-            pass
+    alert_email = email_config["alert_email"]
+    for client_id, client in clients.items():
+        if(client.balance < 0):
+            # print(f"Sending email to {alert_email}, due to {client} balance < 0")
+            send_email(client, alert_email, email_credentials)
         # calculo la categoria del monotributo
-        category = get_category(balance, categories)
-
-        # la agrego al diccionario
-        clients_balance[client_id] = (balance, category)
+        category = get_category(client.balance, categories)
         output_rows += [[client_id, category]]
 
     # Creo la Sheet para cargar los datos de cada cliente y su cat de monotributo
@@ -166,8 +162,6 @@ def main():
         valueInputOption="RAW",
         body=body
     ).execute()
-
-
 
 if __name__ == '__main__':
     main()
