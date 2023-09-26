@@ -16,10 +16,10 @@ from googleapiclient.errors import HttpError
 # If modifying these scopes, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
-def get_category(balance, categories):
+def get_category(earnings, categories):
     # si cae dentro del rango esperado retorno esa categoria
     for i in range(len(categories)):
-        if balance < categories[i]["threshhold"]:
+        if earnings < categories[i]["threshhold"]:
             return categories[i]["category"]
     # si me excedi de todas, retorno la ultima
     return categories[-1]["category"]
@@ -142,7 +142,7 @@ def main():
             # print(f"Sending email to {alert_email}, due to {client} balance < 0")
             send_email(client, alert_email, email_credentials)
         # calculo la categoria del monotributo
-        category = get_category(client.balance, categories)
+        category = get_category(client.earnings, categories)
         output_rows += [[client_id, category]]
 
     # Creo la Sheet para cargar los datos de cada cliente y su cat de monotributo
