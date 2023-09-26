@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import os.path
+import json
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -11,15 +12,15 @@ from googleapiclient.errors import HttpError
 # If modifying these scopes, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
-# The ID and range of a sample spreadsheet.
-SAMPLE_SPREADSHEET_ID = '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms'
-SAMPLE_RANGE_NAME = 'Class Data!A2:E'
-
-
 def main():
-    """Shows basic usage of the Sheets API.
-    Prints values from a sample spreadsheet.
-    """
+    if not os.path.exists('sheets.json'):
+        print("sheets.json not found!")
+        exit(1)
+
+    data = None
+    with open('sheets.json') as json_file:
+        data = json.load(json_file)
+
     creds = None
     # The file token.json stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
@@ -43,18 +44,33 @@ def main():
 
         # Call the Sheets API
         sheet = service.spreadsheets()
-        result = sheet.values().get(spreadsheetId=SAMPLE_SPREADSHEET_ID,
-                                    range=SAMPLE_RANGE_NAME).execute()
-        values = result.get('values', [])
 
-        if not values:
-            print('No data found.')
+        result_expenses = sheet.values().get(spreadsheetId=data['expenses']['spreadsheet_id'],
+                                    range=data['expenses']['range_name']).execute()
+        values_expenses = result_expenses.get('values', [])
+
+        if not values_expenses:
+            print('No data for expenses found.')
             return
 
-        print('Name, Major:')
-        for row in values:
-            # Print columns A and E, which correspond to indices 0 and 4.
-            print('%s, %s' % (row[0], row[4]))
+        print('CLIENT_ID, EXPENSES')
+        for row in values_expenses:
+            # Imprimo el client_id en conjunto con los gastos
+            print(f"{row[0]}, {row[1]}")
+
+        result_earnings = sheet.values().get(spreadsheetId=data['earnings']['spreadsheet_id'],
+                                    range=data['earnings']['range_name']).execute()
+        values_earnings = result_earnings.get('values', [])
+
+        print('CLIENT_ID, EARNINGS')
+        for row in values_earnings:
+            # Imprimo el client_id en conjunto con los ingresos
+            print(f"{row[0]}, {row[1]}")
+
+        if not values_earnings:
+            print('No data for expenses found.')
+            return
+
     except HttpError as err:
         print(err)
 
