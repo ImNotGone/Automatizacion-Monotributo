@@ -1,0 +1,13 @@
+[
+    {"threshhold": 1414762.58, "category": "A"},
+    {"threshhold": 2103025.45, "category": "B"},
+    {"threshhold": 2944235.60, "category": "C"},
+    {"threshhold": 3656604.33, "category": "D"},
+    {"threshhold": 4305799.15, "category": "E"},
+    {"threshhold": 5382248.94, "category": "F"},
+    {"threshhold": 6458698.71, "category": "G"},
+    {"threshhold": 7996484.12, "category": "H"},
+    {"threshhold": 8949911.06, "category": "I"},
+    {"threshhold": 10257028.68, "category": "J"},
+    {"threshhold": 11379612.01, "category": "K"}
+]

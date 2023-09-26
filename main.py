@@ -12,31 +12,15 @@ from googleapiclient.errors import HttpError
 # If modifying these scopes, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
-# no se bien como funciona esto pero es facil de modificar
-def get_category(balance):
-    if balance < 1000000:
-        return "A"
-    if balance < 1486000:
-        return "B"
-    if balance < 2081000:
-        return "C"
-    if balance < 2584000:
-        return "D"
-    if balance < 3043000:
-        return "E"
-    if balance < 3803043:
-        return "F"
-    if balance < 4563652:
-        return "G"
-    if balance < 5650236:
-        return "H"
-    if balance < 6323918:
-        return "I"
-    if balance < 7247514:
-        return "J"
-    return "K"
+def get_category(balance, categories):
+    # si cae dentro del rango esperado retorno esa categoria
+    for i in range(len(categories)):
+        if balance < categories[i]["threshhold"]:
+            return categories[i]["category"]
+    # si me excedi de todas, retorno la ultima
+    return categories[-1]["category"]
 
-def get_data(creds, spreadsheet_info):
+def get_sheet_data(creds, spreadsheet_info):
     try:
         service = build('sheets', 'v4', credentials=creds)
 
@@ -52,14 +36,19 @@ def get_data(creds, spreadsheet_info):
     except HttpError as err:
         print(err)
 
-def main():
-    if not os.path.exists('sheets.json'):
-        print("sheets.json not found!")
+def get_json_file(file_name):
+    if not os.path.exists(file_name):
+        print(f"{file_name} not found!")
         exit(1)
 
-    sheets = None
-    with open('sheets.json') as json_file:
-        sheets = json.load(json_file)
+    with open(file_name, 'r') as json_file:
+        info = json.load(json_file)
+
+    return info
+
+def main():
+    sheets = get_json_file('sheets.json')
+    categories = get_json_file('categories.json')
 
     creds = None
     # The file token.json stores the user's access and refresh tokens, and is
@@ -80,13 +69,13 @@ def main():
             token.write(creds.to_json())
 
     # obtengo los gastos para cada cliente
-    values_expenses = get_data(creds, sheets['expenses'])
+    values_expenses = get_sheet_data(creds, sheets['expenses'])
     if not values_expenses:
         print("No data for expenses found!")
         return
 
     # obtengo los ingresos para cada cliente
-    values_earnings = get_data(creds, sheets['earnings'])
+    values_earnings = get_sheet_data(creds, sheets['earnings'])
     if not values_earnings:
         print("No data for earnings found!")
         return
@@ -123,7 +112,8 @@ def main():
             # TODO: ALERT!
             pass
         # calculo la categoria del monotributo
-        category = get_category(balance)
+        category = get_category(balance, categories)
+
         # la agrego al diccionario
         clients_balance[client_id] = (balance, category)
         print(client_id, clients_balance[client_id])
