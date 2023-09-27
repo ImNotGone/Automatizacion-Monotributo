@@ -87,12 +87,12 @@ El archivo categories.json contiene los rangos para cada categoría de monotribu
 ## Preguntas a desarrollar
 
 - ¿Cómo mejorarías este sistema si tuvieses una semana más para trabajar en él?
-    - Manejo de Errores: Revisar nuevamente estar manejando todas las excepciones posibles, al ejecutar el programa. Dejar a su vez mensajes de error claros para poder solucionar problemas rapidamente en caso de errores.
-    - Pruebas unitarias: Si bien el proyecto no era grande implementar testeos suele prevenir errores de mantenimiento como tambien ayuda a encontrar casos borde que quizas omiti.
-    - Procesos Asincronicos: Actualmente cuando el balance es < 0 se frena el proceso para enviar el mail, lo cual entorpece la ejecucion del programa principal. Podrian crearse procesos hijos o threads que se encarguen del envio del correo cuando sea necesario para que el programa original continue.
-    - Manejo de Datos: Si se consideran altos volumenes de datos seria recomendable utilizar bases de datos en vez de hojas de calculo. Puede mejorar la eficiencia dependiendo de la complejidad de las tareas, asi como la capacidad de manejo de datos a largo plazo.
-    - Logging: Un sistema de logging puede ser una buena adicion para identificar problemas en caso de fallos.
+    - Manejo de Errores: Revisar nuevamente, estar manejando todas las excepciones posibles, al ejecutar el programa. Dejar a su vez mensajes de error claros para poder solucionar problemas rápidamente en caso de errores.
+    - Pruebas unitarias: Si bien el proyecto no era grande implementar testeos suele prevenir errores de mantenimiento, como también ayuda a encontrar casos borde que quizás omití.
+    - Procesos Asincrónicos: Actualmente, cuando el balance es < 0 se frena el proceso para enviar el mail, lo cual entorpece la ejecución del programa principal. Podrían crearse procesos-hijos o Threads que se encarguen del envío del correo cuando sea necesario para que el programa original continúe.
+    - Manejo de Datos: Si se consideran altos volúmenes de datos, sería recomendable utilizar bases de datos en vez de hojas de cálculo. Puede mejorar la eficiencia dependiendo de la complejidad de las tareas, así como la capacidad de manejo de datos a largo plazo.
+    - Logging: Un sistema de logging puede ser una buena adición para identificar problemas en caso de fallos.
     
 - ¿Dónde harías deploy de esta solución y cómo automatizarías su ejecución cada mes?
-    - En Google Cloud se presentan varias opciones, podría armar un contenedor para la aplicación y deployarlo en Google Cloud Run. Luego mediante una rutina, también en Google Cloud puedo hacer una request a mi Cloud Run Service en el intervalo deseado.
-    - Otra alternativa seria correrlo en un servidor propio. El cual tenga un proceso que se encargue de ejecutar el main periodicamente.
+    - En Google Cloud se presentan varias opciones, podría armar un contenedor para la aplicación y deployarlo en Google Cloud Run. Luego, mediante una rutina, también en Google Cloud puedo hacer una request a mi Cloud Run Service en el intervalo deseado.
+    - Otra alternativa sería correrlo en un servidor propio. El cual tenga un proceso que se encargue de ejecutar el main periódicamente.
